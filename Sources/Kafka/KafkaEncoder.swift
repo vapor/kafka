@@ -241,16 +241,13 @@ fileprivate final class KafkaUnkeyedEncodingContainer: UnkeyedEncodingContainer,
     }
 }
 
-fileprivate struct UnsupportedKafkaType: Error {}
-fileprivate struct UnsupportedStringLength: Error {}
-
 fileprivate protocol SingleKafkaEncoder {
     var encoder: RequestEncoder { get }
 }
 
 extension SingleKafkaEncoder {
     fileprivate mutating func encodeNil() throws {
-        try self.encode(-1 as Int32)
+        throw UnsupportedKafkaType()
     }
     
     fileprivate mutating func encode(_ value: Int) throws {
@@ -278,7 +275,7 @@ extension SingleKafkaEncoder {
     }
     
     fileprivate mutating func encode(_ value: UInt8) throws {
-        throw UnsupportedKafkaType()
+        encoder.data.append(value)
     }
     
     fileprivate mutating func encode(_ value: UInt16) throws {
@@ -306,7 +303,6 @@ extension SingleKafkaEncoder {
     }
     
     fileprivate mutating func encode<T>(_ value: T) throws where T : Encodable {
-        
         if let value = value as? CustomKafkaSerializable {
             self.encoder.data.append(value.serialize())
         } else {
@@ -318,3 +314,6 @@ extension SingleKafkaEncoder {
         throw UnsupportedKafkaType()
     }
 }
+
+fileprivate struct UnsupportedKafkaType: Error {}
+fileprivate struct UnsupportedStringLength: Error {}

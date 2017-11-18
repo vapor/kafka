@@ -26,9 +26,7 @@ struct ProduceResponse: Decodable {
         struct PartitionResponse: Decodable {
             var partition: Int32
             var errorCode: Int16
-            var baseOffset: Int64
-            var logAppendTime: Int64
-            var logStartOffset: Int64
+            var offset: Int64
         }
         
         var topic: String
@@ -36,5 +34,4 @@ struct ProduceResponse: Decodable {
     }
     
     var records: [Response]
-    var throttleTimeMS: Int32
 }

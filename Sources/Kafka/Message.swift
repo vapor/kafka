@@ -1,50 +1,49 @@
 import Foundation
 
-struct Message: Encodable, CustomKafkaSerializable {
+struct Message: Encodable {
     enum Version {
         case one
     }
     
-    let key: Data
-    let value: Data
+    var crc32: Int32
+    let magic: UInt8 = 1
+    var attributes: UInt8 = 0
+    let key: Bytes
+    let value: Bytes
     
-    init(key: Data, value: Data) {
+    init(key: Bytes, value: Bytes) {
+        self.crc32 = 0
         self.key = key
         self.value = value
+        
+        self.crc32 = generateCRC32()
     }
     
     func size(version: Version = .one) -> Int32 {
-        return numericCast(6 + self.key.count + self.value.count)
+        return numericCast(6 + self.key.size + self.value.size)
     }
     
-    func serialize() -> Data {
+    func generateCRC32() -> Int32 {
         var header = [UInt8]()
-        
+
         // magic
-        header.append(1)
-        
+        header.append(magic)
+
         // attributes
-        header.append(0)
-        
+        header.append(attributes)
+
         // TODO: Timestamp for message version 1
         var keyLengthData = [UInt8](repeating: 0, count: 4)
         var keyLength = Int32(key.count).bigEndian
         memcpy(&keyLengthData, &keyLength, 4)
-        
+
         var valueLengthData = [UInt8](repeating: 0, count: 4)
         var valueLength = Int32(value.count).bigEndian
         memcpy(&valueLengthData, &valueLength, 4)
-        
-        var message = Data(header + keyLengthData) + key + Data(valueLengthData) + value
-        
-        var crc = makeCRC32(message)
-        var buffer = [UInt8](repeating: 0, count: 4)
-        
-        memcpy(&buffer, &crc, 4)
-        
-        message.insert(contentsOf: buffer, at: 0)
-        
-        return message
+
+        let message = Data(header + keyLengthData) + key.data + Data(valueLengthData) + value.data
+
+        return Int32(bitPattern: makeCRC32(message))
     }
 }
 

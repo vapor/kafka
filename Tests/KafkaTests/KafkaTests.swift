@@ -18,7 +18,7 @@ class KafkaTests: XCTestCase {
         let promise = Promise<Void>()
         
         client.drain { buffer in
-            print(Array(buffer))
+            print(try! KafkaDecoder().decode(ProduceResponse.self, from: Data(buffer[4...])))
             promise.complete()
         }
         
@@ -27,7 +27,7 @@ class KafkaTests: XCTestCase {
             timeoutMS: 1000,
             messages: [
                 .init(topic: "hello", data: [
-//                    .init(partition: 0, messages: [.init(offset: 0, message: .init(key: .init("key".utf8), value: .init("value".utf8)))])
+                    .init(partition: 0, messages: [.init(offset: 0, message: .init(key: "key", value: "value"))])
                 ])
             ]
         )
