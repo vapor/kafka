@@ -10,7 +10,7 @@ class KafkaTests: XCTestCase {
         let queue = DispatchQueue(label: "test")
         
         let client = try socket.writable(queue: queue).map { _ -> TCPClient in
-            let client = TCPClient(socket: socket, worker: queue)
+            let client = TCPClient(socket: socket, worker: Worker(queue: queue))
             client.start()
             return client
         }.blockingAwait(timeout: .seconds(3))
@@ -19,7 +19,7 @@ class KafkaTests: XCTestCase {
         
         client.drain { buffer in
             print(try! KafkaDecoder().decode(ProduceResponse.self, from: Data(buffer[4...])))
-            promise.complete()
+            promise.complete(())
         }
         
         let produce = ProduceRequest(
