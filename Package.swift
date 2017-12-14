@@ -21,7 +21,7 @@ let package = Package(
             name: "Bits",
             dependencies: []),
         .target(
-            name: "libc",
+            name: "COperatingSystem",
             dependencies: []),
         .target(
             name: "Async",
@@ -30,8 +30,11 @@ let package = Package(
             name: "Debugging",
             dependencies: []),
         .target(
+            name: "JunkDrawer",
+            dependencies: ["Async"]),
+        .target(
             name: "TCP",
-            dependencies: ["Async", "Bits", "libc", "Debugging"]),
+            dependencies: ["Async", "Bits", "COperatingSystem", "JunkDrawer", "Debugging"]),
         .target(
             name: "Kafka",
             dependencies: ["TCP"]),

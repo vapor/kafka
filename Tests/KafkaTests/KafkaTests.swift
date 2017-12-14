@@ -5,22 +5,7 @@ import TCP
 
 class KafkaTests: XCTestCase {
     func testExample() throws {
-        let socket = try Socket()
-        try socket.connect(hostname: "localhost", port: 9092)
-        let queue = DispatchQueue(label: "test")
-        
-        let client = try socket.writable(queue: queue).map { _ -> TCPClient in
-            let client = TCPClient(socket: socket, worker: Worker(queue: queue))
-            client.start()
-            return client
-        }.blockingAwait(timeout: .seconds(3))
-        
-        let promise = Promise<Void>()
-        
-        client.drain { buffer in
-            print(try! KafkaDecoder().decode(ProduceResponse.self, from: Data(buffer[4...])))
-            promise.complete(())
-        }
+        let client = try KafkaClient(hostname: "localhost", port: 9092)
         
         let produce = ProduceRequest(
             requiredAknowledgements: 1,
@@ -34,18 +19,8 @@ class KafkaTests: XCTestCase {
         
         let request = Request(apiKey: .produce, apiVersion: 0, correlationId: 1, clientId: "a12", message: produce)
         
-        let message = try KafkaEncoder().encode(request)
-        
-        sleep(1)
-        print(Array(message))
-        
-        client.inputStream(message)
-        
-        try promise.future.blockingAwait()
-        
-        client.close()
+        print(try client.send(message: request, expecting: ProduceResponse.self))
     }
-
 
     static var allTests = [
         ("testExample", testExample),

@@ -1,4 +1,4 @@
-enum APIKey: Int16, Encodable {
+public enum APIKey: Int16, Encodable {
     case produce = 0
     case fetch = 1
     case listOffsets = 2

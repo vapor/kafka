@@ -3,9 +3,13 @@ import Foundation
 final class KafkaDecoder {
     init() {}
     
+    var read = 0
+    
     func decode<M>(_ response: M.Type, from data: Data) throws -> Response<M> {
-        let decoder = ResponseDecoder(data: data)
-        return try Response<M>(from: decoder)
+        let decoder = try ResponseDecoder(data: data)
+        let decoded = try Response<M>(from: decoder)
+        read = numericCast(decoder.read)
+        return decoded
     }
 }
 
@@ -14,11 +18,13 @@ fileprivate final class ResponseDecoder: Decoder {
     
     fileprivate var userInfo = [CodingUserInfoKey : Any]()
     
-    fileprivate let data: Data
+    fileprivate var data: Data
+    fileprivate var read: Int32 = 0
     fileprivate var position = 0
     
-    fileprivate init(data: Data) {
+    fileprivate init(data: Data) throws {
         self.data = data
+        self.read = try self.decode()
     }
     
     fileprivate func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key : CodingKey {
