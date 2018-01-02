@@ -1,6 +1,6 @@
 import Foundation
 
-struct Message: Encodable {
+public struct Message: Encodable {
     enum Version {
         case one
     }
@@ -8,10 +8,10 @@ struct Message: Encodable {
     var crc32: Int32
     let magic: UInt8 = 1
     var attributes: UInt8 = 0
-    let key: Bytes
-    let value: Bytes
+    public let key: Bytes
+    public let value: Bytes
     
-    init(key: Bytes, value: Bytes) {
+    public init(key: Bytes, value: Bytes) {
         self.crc32 = 0
         self.key = key
         self.value = value
@@ -47,10 +47,10 @@ struct Message: Encodable {
     }
 }
 
-struct MessageSetElement: Encodable {
+public struct MessageSetElement: Encodable {
     var offset: Int64
     var size: Int32
-    var message: Message
+    public var message: Message
     
     init(offset: Int64, message: Message) {
         self.offset = offset
@@ -75,4 +75,22 @@ extension Array where Element == MessageSetElement {
     }
 }
 
-typealias MessageSet = [MessageSetElement]
+typealias _MessageSet = [MessageSetElement]
+
+public struct MessageSet: Encodable, ExpressibleByArrayLiteral, ExpressibleByDictionaryLiteral {
+    var messages: _MessageSet
+    
+    public func encode(to encoder: Encoder) throws {
+        try messages.encode(to: encoder)
+    }
+    
+    public init(arrayLiteral elements: MessageSetElement...) {
+        self.messages = elements
+    }
+    
+    public init(dictionaryLiteral elements: (Bytes, Bytes)...) {
+        self.messages = elements.map { key, value in
+            return MessageSetElement(offset: 0, message: Message(key: key, value: value))
+        }
+    }
+}
