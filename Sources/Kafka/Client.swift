@@ -1,6 +1,6 @@
-import TCP
 import Foundation
 import Dispatch
+import Sockets
 
 public final class KafkaClient {
     public struct Settings {
@@ -16,24 +16,27 @@ public final class KafkaClient {
         return _nextCorrelation
     }
     
-    let client: TCPClient
+    let client: TCPInternetSocket
     var data = Data()
     
     public var settings = Settings(timeoutMS: 500)
     
     public init(hostname: String, port: UInt16) throws {
-        let socket = try TCPSocket(isNonBlocking: false)
-        self.client = try TCPClient(socket: socket)
-        try client.connect(hostname: hostname, port: port)
+        let socket = try TCPInternetSocket(scheme: "http", hostname: hostname, port: port)
+        try socket.connect()
+        client = socket
     }
     
     func send<M, R>(message: Request<M>, expecting: R.Type) throws -> Response<R> {
         var message = try KafkaEncoder().encode(message)
+        print(message)
+        print(message.makeBytes())
+        print(String(data: message, encoding: .ascii)!)
         
         var written: Int
         
         repeat {
-            written = try client.socket.write(message)
+            written = try client.write(message)
             
             if written == message.count {
                 return try readResponse(R.self)
@@ -50,7 +53,9 @@ public final class KafkaClient {
     }
     
     func readResponse<R>(_ type: R.Type) throws -> Response<R> {
-        self.data.append(try client.socket.read(max: 65_535))
+        let read = try client.read(max: 65_535)
+        self.data.append(Data(bytes: read))
+        print(self.data)
         
         let decoder = KafkaDecoder()
         let decoded = try decoder.decode(R.self, from: self.data)

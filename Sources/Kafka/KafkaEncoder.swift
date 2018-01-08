@@ -201,7 +201,7 @@ fileprivate struct KafkaKeyedEncodingContainer<K: CodingKey>: KeyedEncodingConta
 }
 
 fileprivate final class KafkaUnkeyedEncodingContainer: UnkeyedEncodingContainer, SingleKafkaEncoder {
-    fileprivate var count = 0
+    fileprivate var count = 1
     fileprivate let countIndex: Int
     
     fileprivate func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
