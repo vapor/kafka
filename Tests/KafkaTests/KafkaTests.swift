@@ -3,9 +3,9 @@ import XCTest
 
 class KafkaTests: XCTestCase {
     func testExample() throws {
-        let producer = try KafkaClient(hostname: "localhost", port: 9092)
-        let produce = try producer.produce([
-            "": "value"
+        let producer = try! KafkaClient(hostname: "localhost", port: 9092)
+        let produce = try! producer.produce([
+            "sup": "value"
         ], toTopic: "hello", acknowledge: .one)
         print(produce)
     }

@@ -56,6 +56,8 @@ public final class KafkaClient {
         let read = try client.read(max: 65_535)
         self.data.append(Data(bytes: read))
         print(self.data)
+        print(data.makeBytes())
+        print(String(data: data, encoding: .ascii)!)
         
         let decoder = KafkaDecoder()
         let decoded = try decoder.decode(R.self, from: self.data)

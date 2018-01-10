@@ -41,6 +41,7 @@ fileprivate final class ResponseDecoder: Decoder {
     
     fileprivate func remaining(_ n: Int) throws {
         guard data.count - position >= n else {
+            print(2)
             throw InvalidResponseFormat()
         }
     }
@@ -101,6 +102,7 @@ fileprivate final class ResponseDecoder: Decoder {
         defer { position += numericCast(size) }
         
         guard let string = String(data: data[position..<position + numericCast(size)], encoding: .utf8) else {
+            print(1)
             throw InvalidResponseFormat()
         }
         
