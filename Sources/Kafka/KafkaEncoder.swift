@@ -200,7 +200,7 @@ fileprivate struct KafkaKeyedEncodingContainer<K: CodingKey>: KeyedEncodingConta
     }
 }
 
-fileprivate final class KafkaUnkeyedEncodingContainer: UnkeyedEncodingContainer, SingleKafkaEncoder {
+fileprivate final class KafkaUnkeyedEncodingContainer: UnkeyedEncodingContainer {
     fileprivate var count = 0
     fileprivate let countIndex: Int
     
@@ -230,6 +230,82 @@ fileprivate final class KafkaUnkeyedEncodingContainer: UnkeyedEncodingContainer,
         self.codingPath = codingPath
         self.countIndex = encoder.data.endIndex
         encoder.data.append(contentsOf: [0, 0, 0, 0])
+    }
+    
+    fileprivate func encodeNil() throws {
+        throw UnsupportedKafkaType()
+    }
+    
+    fileprivate func encode(_ value: Int) throws {
+        throw UnsupportedKafkaType()
+    }
+    
+    fileprivate func encode(_ value: Int8) throws {
+        self.count += 1
+        encoder.data.append(numericCast(value))
+    }
+    
+    fileprivate func encode(_ value: Int16) throws {
+        self.count += 1
+        try encoder.encode(value)
+    }
+    
+    fileprivate func encode(_ value: Int32) throws {
+        self.count += 1
+        try encoder.encode(value)
+    }
+    
+    fileprivate func encode(_ value: Int64) throws {
+        self.count += 1
+        try encoder.encode(value)
+    }
+    
+    fileprivate func encode(_ value: UInt) throws {
+        throw UnsupportedKafkaType()
+    }
+    
+    fileprivate func encode(_ value: UInt8) throws {
+        self.count += 1
+        encoder.data.append(value)
+    }
+    
+    fileprivate func encode(_ value: UInt16) throws {
+        throw UnsupportedKafkaType()
+    }
+    
+    fileprivate func encode(_ value: UInt32) throws {
+        throw UnsupportedKafkaType()
+    }
+    
+    fileprivate func encode(_ value: UInt64) throws {
+        throw UnsupportedKafkaType()
+    }
+    
+    fileprivate func encode(_ value: Float) throws {
+        throw UnsupportedKafkaType()
+    }
+    
+    fileprivate func encode(_ value: Double) throws {
+        throw UnsupportedKafkaType()
+    }
+    
+    fileprivate func encode(_ value: String) throws {
+        self.count += 1
+        try self.encoder.encode(value)
+    }
+    
+    fileprivate func encode<T>(_ value: T) throws where T : Encodable {
+        self.count += 1
+        
+        if let value = value as? CustomKafkaSerializable {
+            self.encoder.data.append(value.serialize())
+        } else {
+            try value.encode(to: encoder)
+        }
+    }
+    
+    fileprivate func encode(_ value: Bool) throws {
+        throw UnsupportedKafkaType()
     }
     
     deinit {
